@@ -1,11 +1,16 @@
+from __future__ import division
 from github import Github
 
-class file:
+class Git_file:
 
-    def __init__(self, commits, lines, authors):
+    def __init__(self, name, commits_size, commits, lines, authors, code_churn):
+        self.name = name
+        self.commits_size = commits_size
         self.commits = commits
         self.lines = lines
-        
+        self.authors = authors
+        self.code_churn = code_churn
+
 
 def grab_repo_files(gh_instance, repo_name):
 
@@ -17,19 +22,50 @@ def grab_repo_files(gh_instance, repo_name):
     root_sha = last_commit.sha
 
     tree = base_repo.get_git_tree(root_sha, recursive=True)
-    file_commits = grab_files(base_repo, tree)
+    file_commits = grab_files_from_tree(base_repo, tree)
 
-    for file, commits in file_commits.iteritems():
-        print "%s : %d" % (file, commits)
-
-
-def grab_files(repo, tree):
-
-    file_commits = dict()
-    for node in tree.tree:
-        if node.type != "tree":
-            commits = repo.get_commits(path=node.path)
-            commit_amount = commits.totalCount
-            file_commits[node.path] = commit_amount
     return file_commits
 
+
+def grab_files_from_tree(repo, tree):
+
+    files = list()
+    for node in tree.tree:
+        if node.type != "tree":
+
+            commits_list = repo.get_commits(path=node.path)
+            commit_amount = commits_list.totalCount
+
+            this_file = repo.get_contents(node.path)
+
+            total_lines = 0
+            total_additions = 0
+            commit_stats = list()
+
+            for commit in commits_list:
+                commit_lines = 0
+                commit_additions = 0
+                for content in commit.files:
+                    if content.filename == this_file.path:
+
+                        commit_lines = content.additions
+                        commit_lines = content.deletions
+                        total_lines += content.additions
+                        total_lines -= content.deletions
+
+                        commit_additions = content.additions
+                        total_additions += content.additions
+                        break
+                commit_stats.append( (commit_lines, commit_additions) )
+
+            authors = dict()
+            
+            churn = 0
+            if total_additions != 0:
+                churn = ((total_additions-total_lines) / total_additions) * 100.0
+
+            new_file = Git_file( this_file.name, commit_amount, commit_stats,\
+                                 total_lines, authors, churn )
+            files.append( new_file )
+
+    return files
