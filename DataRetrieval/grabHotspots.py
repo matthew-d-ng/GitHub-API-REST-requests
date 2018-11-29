@@ -1,5 +1,17 @@
 from __future__ import division
 from github import Github
+from github import enable_console_debug_logging
+
+class Git_tree_node:
+
+    def __init__( self, ftype, data=None, children=[] ):
+        self.data = data
+        self.ftype = ftype
+        self.children = children
+
+    def add_child(self, node):
+        self.children.append(node)
+
 
 class Git_file:
 
@@ -27,26 +39,38 @@ def grab_repo_files(gh_instance, repo_name):
 
     base_repo = gh_instance.get_repo(repo_name)
     print base_repo.name, "\n"
-
+    
     commit_list = base_repo.get_commits()
     last_commit = commit_list[0]
     root_sha = last_commit.sha
-
-    tree = base_repo.get_git_tree(root_sha, recursive=True)
+    
+    tree = base_repo.get_git_tree(root_sha)
     file_commits = grab_files_from_tree(base_repo, tree)
 
     return file_commits
 
 
-def grab_files_from_tree(repo, tree):
+def grab_files_from_tree(repo, tree, parent=""):
+    
+    path = parent
+    if parent == "":
+        path = repo.name
 
-    files = list()
+    git_tree = Git_tree_node("tree", path, [])
+
     for node in tree.tree:
-        if node.type != "tree":
+        if node.type == "tree":
 
-            commits_list = repo.get_commits(path=node.path)
+            sub_tree = repo.get_git_tree(node.sha)
+            new_child = grab_files_from_tree( repo, sub_tree, parent + node.path + "/")
+            git_tree.add_child( new_child )
+
+        else:
+
+            commits_list = repo.get_commits(path=parent + node.path)
             commit_amount = commits_list.totalCount
-            this_file = repo.get_contents(node.path)
+
+            this_file = repo.get_contents(parent + node.path)
 
             total_lines = 0
             total_additions = 0
@@ -87,6 +111,8 @@ def grab_files_from_tree(repo, tree):
 
             new_file = Git_file( this_file.name, commit_amount, commit_stats, \
                                            total_lines, auth_churn, churn )
-            files.append( new_file )
 
-    return files
+            new_node = Git_tree_node( "file", new_file, [] )
+            git_tree.add_child( new_node )
+
+    return git_tree
