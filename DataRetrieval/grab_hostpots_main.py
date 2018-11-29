@@ -1,4 +1,5 @@
 import getpass
+import json
 from grabHotspots import grab_repo_files
 from grabHotspots import Git_tree_node
 from grabHotspots import Git_file
@@ -23,13 +24,14 @@ password = getpass.getpass("Password: ")
 g = Github(username, password)
 
 if g is not None:
-    file_commits = grab_repo_files(g, "XanthusXX/MedicalApp")
+    file_commits = grab_repo_files(g, "matthew-d-ng/HaskellProblems")
 
     print "success"
 
     # print_tree( file_commits )
 
     json_from_git_tree( file_commits )
+
 
 else:
     print "unsuccessful"
