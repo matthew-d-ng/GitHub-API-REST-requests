@@ -57,10 +57,10 @@ def json_from_git_tree(tree):
             files = files + new_json[0]
             links = links + new_json[1]
 
-    with open('links.json', 'w') as outfile:
+    with open("../DataDisplay/links.json", 'w') as outfile:
         json.dump(links, outfile)
 
-    with open('files.json', 'w') as outfile:
+    with open("../DataDisplay/files.json", 'w') as outfile:
         json.dump(files, outfile)
 
     return (files, links)
