@@ -24,7 +24,7 @@ password = getpass.getpass("Password: ")
 g = Github(username, password)
 
 if g is not None:
-    file_commits = grab_repo_files(g, "matthew-d-ng/HaskellProblems")
+    file_commits = grab_repo_files(g, "XanthusXX/MedicalApp")
 
     print "success"
 
