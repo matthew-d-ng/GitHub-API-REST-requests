@@ -109,7 +109,7 @@ def grab_files_from_tree(repo, tree, parent=""):
             for auth, stats in authors.iteritems():
                 auth_churn[auth] = code_churn( stats[1], stats[0] )
 
-            new_file = Git_file( this_file.name, commit_amount, commit_stats, \
+            new_file = Git_file( parent + node.path, commit_amount, commit_stats, \
                                            total_lines, auth_churn, churn )
 
             new_node = Git_tree_node( "file", new_file, [] )
