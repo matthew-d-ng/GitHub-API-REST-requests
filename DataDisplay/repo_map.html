@@ -120,12 +120,63 @@
                             .enter()
                             .append("g");
 
+                        var tip;
+                        svg.on("click", function () {
+                            if (tip) tip.remove();
+                        });
+
                         var circle = node
                             .append("circle")
                             .attr("r", circleSize)
                             .attr("fill", circleColour)
-                            .on("mouseover", fade(.4))
-                            .on("mouseout", fade(1));
+                            .on("mouseover", fade(0.4))
+                            .on("mouseout", fade(1))
+                            .on("click", function (d) {
+                                d3.event.stopPropagation();
+                                if (d.type != "dir") {
+                                    if (tip) tip.remove();
+
+                                    tip = svg.append("g")
+                                        .attr("transform", "translate(" + d.x + "," + d.y + ")");
+
+                                    var rect = tip.append("rect")
+                                        .style("fill", "white")
+                                        .style("stroke", "steelblue");
+
+                                    tip.append("text")
+                                        .text("Name: " + d.file)
+                                        .attr("dy", "1em")
+                                        .attr("x", 5);
+
+                                    tip.append("text")
+                                        .text("Commits: " + d.commits)
+                                        .attr("dy", "2em")
+                                        .attr("x", 5);
+
+                                    tip.append("text")
+                                        .text("Code churn: " + Math.floor(d.churn) + "%")
+                                        .attr("dy", "3em")
+                                        .attr("x", 5);
+
+                                    tip.append("text")
+                                        .text(" Disclaimer: code churn >100% means they deleted other people's code ")
+                                        .attr("dy", "5em")
+                                        .attr("x", 5);
+
+                                    var count = 7;
+                                    d.authors.forEach(function (d) {
+                                        tip.append("text")
+                                            .text("Author: " + d[0] + ", Churn: " + Math.floor(d[1]) + "%")
+                                            .attr("dy", count + "em")
+                                            .attr("x", 5);
+                                        count++;
+                                    });
+
+                                    var bbox = tip.node().getBBox();
+                                    rect.attr("width", bbox.width + 5)
+                                        .attr("height", bbox.height + 5);
+                                }
+                            });
 
                         var lables = node.append("text")
                             .text(nodeLabel)
@@ -138,7 +189,6 @@
                             .text(function (d) { return d.file; });
 
                         function tickActions() {
-
                             node
                                 .attr("transform", function (d) {
                                     return "translate(" + d.x + "," + d.y + ")";
@@ -218,6 +268,7 @@
                         }
 
                         drag_handler(node);
+
                     });
             });
     </script>
